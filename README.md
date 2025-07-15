@@ -4,7 +4,7 @@
 
 **konfigurator** is a lightweight Python configuration management utility that allows you to define, override, and instantiate configuration dictionaries and Python classes from simple config files or command-line arguments.
 
-Further, it allows you to instantiate objects from classes using import paths. In this way, you *no global registry or any disclosure* of your private code is needed.
+Further, it allows you to instantiate objects from classes using import paths. In this way, *no global registry or any disclosure* of your private code is needed.
 
 The instantiation via import path is inspired by https://github.com/Farama-Foundation/HighwayEnv
 
@@ -59,7 +59,7 @@ pip install -e .[dev,test]
     ```
     Currently, floats, ints, and booleans are converted into their respective type. Strings and other types remain strings.
 
-    3. Instantiate classes from config
+3. Instantiate classes from config
 
     Use the `instantiate_class_from_config` to build objects dynamically (IMPORTANT: the value for the key `type` defines the import path):
     ```python
