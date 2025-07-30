@@ -3,7 +3,9 @@ import importlib.util
 import os
 import sys
 from importlib.machinery import ModuleSpec
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
+
+from ml_collections import FieldReference
 
 
 def get_class_path(cls: Callable) -> str:
@@ -39,7 +41,7 @@ def instantiate_object_from_config(config: dict) -> Callable:
     return class_object(**params)
 
 
-def load_config(*, config_path: str) -> dict:
+def load_config(*, config_path: str, overrides: Optional[list[str]] = None) -> dict:
     """
     Load a Python configuration file and extract its variables into a dictionary.
     Variables that start with an underscore, callable objects, and modules are filtered out.
@@ -52,10 +54,25 @@ def load_config(*, config_path: str) -> dict:
     sys.modules["user_config"] = config
     spec.loader.exec_module(config)
 
+    config = vars(config)
+    _update_config_with_overrides(config=config, overrides=overrides)
+
     # Extract variables: filter out built-ins and modules
+    config_dict = _resolve_config_dict(config)
+    return config_dict
+
+
+def _resolve_config_dict(config: dict) -> dict:
+    def _resolve_value(value: Any) -> Any:
+        if isinstance(value, dict):
+            return _resolve_config_dict(value)
+        elif isinstance(value, FieldReference):
+            return value.get()
+        return value
+
     config_dict = {
-        key: value
-        for key, value in vars(config).items()
+        key: _resolve_value(value)
+        for key, value in config.items()
         if not key.startswith("_")
         and not callable(value)
         and not isinstance(value, type(sys))
@@ -63,7 +80,7 @@ def load_config(*, config_path: str) -> dict:
     return config_dict
 
 
-def update_config_with_overrides(
+def _update_config_with_overrides(
     *, config: dict, overrides: Optional[list[str]]
 ) -> dict:
     """
@@ -74,11 +91,11 @@ def update_config_with_overrides(
     if overrides:
         for item in overrides:
             key, value = item.split("=", 1)
-            set_nested(config, key, value)
+            _set_nested(config, key, value)
     return config
 
 
-def set_nested(config, var_path, value):
+def _set_nested(config, var_path, value):
     """
     Set a nested value in config given a dotted path (e.g., my_dict.name).
     """
@@ -87,6 +104,7 @@ def set_nested(config, var_path, value):
     for key in keys[:-1]:
         obj = getattr(obj, key) if hasattr(obj, key) else obj[key]
 
+    # Convert value to appropriate type
     if value.lower() == "true":
         value = True
     elif value.lower() == "false":
@@ -99,4 +117,9 @@ def set_nested(config, var_path, value):
                 value = float(value)
             except ValueError:
                 pass
-    obj[keys[-1]] = value
+
+    # handle FieldReference overrides
+    if isinstance(obj[keys[-1]], FieldReference):
+        obj[keys[-1]].set(value)
+    else:
+        obj[keys[-1]] = value

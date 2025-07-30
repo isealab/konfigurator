@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 
-from konfigurator import load_config, update_config_with_overrides
+from konfigurator import load_config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test script for purepyconf")
@@ -28,7 +28,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config = load_config(config_path=args.config)
-    config = update_config_with_overrides(config=config, overrides=args.override)
+    config = load_config(config_path=args.config, overrides=args.override)
     with open(args.save_to, "w") as f:
         json.dump(config, f, indent=4)

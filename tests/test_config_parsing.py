@@ -14,8 +14,35 @@ def test_load_config():
     config = load_config(config_path=config_path)
     assert isinstance(config, dict), "Config should be a dictionary"
     assert "experiment_dir" in config, "Config should contain 'experiment_dir'"
-    assert "class_config_1" in config, "Config should contain 'class_config_'"
+    assert "class_config_1" in config, "Config should contain 'class_config_1'"
+    assert "class_config_2" in config, "Config should contain 'class_config_2'"
     assert "_test_class_obj" not in config, "Config should contain '_test_class_obj'"
+    assert (
+        config["experiment_dir"] == "tests/work_dir/experiment"
+    ), "Experiment dir should be set correctly"
+
+
+def test_load_config_with_overrides():
+    config = load_config(
+        config_path=config_path,
+        overrides=[
+            "_work_dir=affe",
+            "class_config_1.name=overridden_name",
+            "class_config_2.name=overridden_name2",
+        ],
+    )
+    assert (
+        config["class_config_1"]["name"] == "overridden_name"
+    ), "Class config name should be overridden"
+    assert (
+        config["class_config_1"]["type"] == "tests.test_utils.MyTestClass"
+    ), "Class type should not be overridden"
+    assert (
+        config["class_config_2"]["name"] == "overridden_name2"
+    ), "Class config 2 name should be overridden"
+    assert (
+        config["experiment_dir"] == "affe/experiment"
+    ), "Experiment dir should be set to affe/experiment"
 
 
 def test_override_from_cli():
@@ -29,7 +56,7 @@ def test_override_from_cli():
                 "--config",
                 config_path,
                 "--override",
-                "experiment_dir=/tmp/experiment",
+                "_work_dir=tmp_tmp",
                 "--override",
                 "class_config_1.name=overridden_name",
                 "--override",
@@ -45,7 +72,7 @@ def test_override_from_cli():
             config = json.load(f)
 
         assert (
-            config["experiment_dir"] == "/tmp/experiment"
+            config["experiment_dir"] == "tmp_tmp/experiment"
         ), "Experiment dir should be overridden"
         assert (
             config["class_config_1"]["name"] == "overridden_name"
