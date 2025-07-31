@@ -66,6 +66,12 @@ def _resolve_config_dict(config: dict) -> dict:
     def _resolve_value(value: Any) -> Any:
         if isinstance(value, dict):
             return _resolve_config_dict(value)
+        elif isinstance(value, list):
+            return [_resolve_value(item) for item in value]
+        elif isinstance(value, tuple):
+            return tuple(_resolve_value(item) for item in value)
+        elif isinstance(value, set):
+            return {_resolve_value(item) for item in value}
         elif isinstance(value, FieldReference):
             return value.get()
         return value
