@@ -13,3 +13,5 @@ class_config_1 = dict(
     name="test_instance_1",
 )
 class_config_2 = class_config_2_
+
+optimizer = dict(lr=0.001, name="adam")

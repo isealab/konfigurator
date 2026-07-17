@@ -47,6 +47,16 @@ def test_load_config_with_overrides():
     ), "Experiment dir should be set to affe/experiment"
 
 
+def test_override_nested_scientific_notation():
+    config = load_config(
+        config_path=config_path,
+        overrides=["optimizer.lr=1e-4"],
+    )
+    assert config["optimizer"]["lr"] == 1e-4
+    assert isinstance(config["optimizer"]["lr"], float)
+    assert config["optimizer"]["name"] == "adam", "Sibling key should be untouched"
+
+
 def test_override_with_unknown_key_raises():
     with pytest.raises(KeyError):
         load_config(
