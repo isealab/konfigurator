@@ -29,16 +29,30 @@ def class_from_path(path: str) -> Callable:
     return class_object
 
 
-def instantiate_object_from_config(config: dict) -> Callable:
+def instantiate_object_from_config(config: dict) -> Any:
     """
     Instantiates a class from a configuration dictionary.
     The dictionary must contain a 'type' key with the full class path.
+    Nested dictionaries containing a 'type' key (e.g. as parameter values,
+    or inside lists/tuples) are instantiated recursively.
     """
     assert "type" in config, "Config must contain 'type' key"
     class_path = config["type"]
-    params = {k: v for k, v in config.items() if not k == "type"}
+    params = {k: _instantiate_value(v) for k, v in config.items() if not k == "type"}
     class_object = class_from_path(class_path)
     return class_object(**params)
+
+
+def _instantiate_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        if "type" in value:
+            return instantiate_object_from_config(value)
+        return {k: _instantiate_value(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_instantiate_value(item) for item in value]
+    elif isinstance(value, tuple):
+        return tuple(_instantiate_value(item) for item in value)
+    return value
 
 
 def load_config(*, config_path: str, overrides: Optional[list[str]] = None) -> dict:
