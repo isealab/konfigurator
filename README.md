@@ -86,3 +86,45 @@ pip install -e .[dev]
     # later, e.g. in a different process
     config = load_config_from_json("config.json")
     ```
+
+## Deployment
+
+Releases are built and published to PyPI manually using [`build`](https://pypi.org/project/build/)
+and [`twine`](https://pypi.org/project/twine/), both included in the `dev` extra.
+
+1. Bump the `version` field in [`pyproject.toml`](pyproject.toml) (follow [SemVer](https://semver.org/)).
+
+2. Build the source distribution and wheel:
+    ```bash
+    python -m build
+    ```
+    This produces `dist/konfigurator-<version>.tar.gz` and `dist/konfigurator-<version>-py3-none-any.whl`.
+
+3. Sanity-check the built artifacts before uploading:
+    ```bash
+    twine check dist/*
+    ```
+
+4. (Optional but recommended) Upload to [TestPyPI](https://test.pypi.org/) first and verify the
+   install works:
+    ```bash
+    twine upload --repository testpypi dist/*
+    pip install --index-url https://test.pypi.org/simple/ konfigurator==<version>
+    ```
+
+5. Upload to PyPI:
+    ```bash
+    twine upload dist/*
+    ```
+    `twine` will prompt for PyPI credentials, or read them from `~/.pypirc` / the
+    `TWINE_USERNAME` and `TWINE_PASSWORD` (or `TWINE_API_KEY`) environment variables. Using a
+    scoped [PyPI API token](https://pypi.org/help/#apitoken) as the password (with username
+    `__token__`) is recommended over a personal password.
+
+6. Tag the release in git and push the tag, e.g.:
+    ```bash
+    git tag v<version>
+    git push origin v<version>
+    ```
+
+There is currently no automated release workflow — publishing is a manual, local step.
