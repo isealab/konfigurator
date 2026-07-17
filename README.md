@@ -1,4 +1,5 @@
 ![Tests](https://github.com/isealab/konfigurator/actions/workflows/test.yml/badge.svg)
+![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)
 
 # konfigurator
 
@@ -13,6 +14,7 @@ The instantiation via import path is inspired by https://github.com/Farama-Found
 - Load Python-based configuration files as dictionaries.
 - Override configuration parameters via command-line.
 - Instantiate Python classes from config dictionaries using import paths.
+- Save resolved configs to JSON and reload them later.
 
 ## Installation
 `cd` into repository and run
@@ -22,7 +24,7 @@ pip install .
 
 To install in developer mode (with `pre-commit` and `pytest`) run
 ```bash
-pip install -e .[dev,test]
+pip install -e .[dev]
 ```
 
 ## Usage
@@ -71,4 +73,16 @@ pip install -e .[dev,test]
     }
 
     my_obj = instantiate_object_from_config(class_config_1)
+    ```
+
+4. Save and reload a resolved config as JSON
+
+    ```python
+    from konfigurator import load_config, save_config_to_json, load_config_from_json
+
+    config = load_config(config_path="config.py")
+    save_config_to_json(config, "config.json")
+
+    # later, e.g. in a different process
+    config = load_config_from_json("config.json")
     ```

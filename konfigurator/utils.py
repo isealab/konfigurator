@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import json
 import os
 import sys
 from importlib.machinery import ModuleSpec
@@ -29,16 +30,30 @@ def class_from_path(path: str) -> Callable:
     return class_object
 
 
-def instantiate_object_from_config(config: dict) -> Callable:
+def instantiate_object_from_config(config: dict) -> Any:
     """
     Instantiates a class from a configuration dictionary.
     The dictionary must contain a 'type' key with the full class path.
+    Nested dictionaries containing a 'type' key (e.g. as parameter values,
+    or inside lists/tuples) are instantiated recursively.
     """
     assert "type" in config, "Config must contain 'type' key"
     class_path = config["type"]
-    params = {k: v for k, v in config.items() if not k == "type"}
+    params = {k: _instantiate_value(v) for k, v in config.items() if not k == "type"}
     class_object = class_from_path(class_path)
     return class_object(**params)
+
+
+def _instantiate_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        if "type" in value:
+            return instantiate_object_from_config(value)
+        return {k: _instantiate_value(v) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_instantiate_value(item) for item in value]
+    elif isinstance(value, tuple):
+        return tuple(_instantiate_value(item) for item in value)
+    return value
 
 
 def load_config(*, config_path: str, overrides: Optional[list[str]] = None) -> dict:
@@ -60,6 +75,26 @@ def load_config(*, config_path: str, overrides: Optional[list[str]] = None) -> d
     # Extract variables: filter out built-ins and modules
     config_dict = _resolve_config_dict(config)
     return config_dict
+
+
+def save_config_to_json(config: dict, config_path: str) -> None:
+    """
+    Save a resolved configuration dictionary (e.g. as returned by `load_config`)
+    to a JSON file.
+    """
+    config_path = os.path.abspath(config_path)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
+
+
+def load_config_from_json(config_path: str) -> dict:
+    """
+    Load a configuration dictionary from a JSON file previously written by
+    `save_config_to_json`.
+    """
+    config_path = os.path.abspath(config_path)
+    with open(config_path, "r") as f:
+        return json.load(f)
 
 
 def _resolve_config_dict(config: dict) -> dict:
@@ -109,6 +144,13 @@ def _set_nested(config, var_path, value):
     obj = config
     for key in keys[:-1]:
         obj = getattr(obj, key) if hasattr(obj, key) else obj[key]
+
+    last_key = keys[-1]
+    exists = hasattr(obj, last_key) if not isinstance(obj, dict) else last_key in obj
+    if not exists:
+        raise KeyError(
+            f"Cannot override '{var_path}': key '{last_key}' does not exist in the config"
+        )
 
     # Convert value to appropriate type
     if value.lower() == "true":
