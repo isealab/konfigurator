@@ -110,6 +110,13 @@ def _set_nested(config, var_path, value):
     for key in keys[:-1]:
         obj = getattr(obj, key) if hasattr(obj, key) else obj[key]
 
+    last_key = keys[-1]
+    exists = hasattr(obj, last_key) if not isinstance(obj, dict) else last_key in obj
+    if not exists:
+        raise KeyError(
+            f"Cannot override '{var_path}': key '{last_key}' does not exist in the config"
+        )
+
     # Convert value to appropriate type
     if value.lower() == "true":
         value = True

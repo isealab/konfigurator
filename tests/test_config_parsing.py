@@ -3,6 +3,8 @@ import os
 import subprocess
 import tempfile
 
+import pytest
+
 from konfigurator import load_config
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +45,14 @@ def test_load_config_with_overrides():
     assert (
         config["experiment_dir"] == "affe/experiment"
     ), "Experiment dir should be set to affe/experiment"
+
+
+def test_override_with_unknown_key_raises():
+    with pytest.raises(KeyError):
+        load_config(
+            config_path=config_path,
+            overrides=["class_config_1.does_not_exist=1"],
+        )
 
 
 def test_override_from_cli():
