@@ -1,4 +1,5 @@
 ![Tests](https://github.com/isealab/konfigurator/actions/workflows/test.yml/badge.svg)
+![Python versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)
 
 # konfigurator
 
@@ -23,7 +24,7 @@ pip install .
 
 To install in developer mode (with `pre-commit` and `pytest`) run
 ```bash
-pip install -e .[dev,test]
+pip install -e .[dev]
 ```
 
 ## Usage
