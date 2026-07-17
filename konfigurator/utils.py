@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import json
 import os
 import sys
 from importlib.machinery import ModuleSpec
@@ -74,6 +75,26 @@ def load_config(*, config_path: str, overrides: Optional[list[str]] = None) -> d
     # Extract variables: filter out built-ins and modules
     config_dict = _resolve_config_dict(config)
     return config_dict
+
+
+def save_config_to_json(config: dict, config_path: str) -> None:
+    """
+    Save a resolved configuration dictionary (e.g. as returned by `load_config`)
+    to a JSON file.
+    """
+    config_path = os.path.abspath(config_path)
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
+
+
+def load_config_from_json(config_path: str) -> dict:
+    """
+    Load a configuration dictionary from a JSON file previously written by
+    `save_config_to_json`.
+    """
+    config_path = os.path.abspath(config_path)
+    with open(config_path, "r") as f:
+        return json.load(f)
 
 
 def _resolve_config_dict(config: dict) -> dict:

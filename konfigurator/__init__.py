@@ -4,6 +4,8 @@ from .utils import (  # noqa: F401
     get_class_path,
     instantiate_object_from_config,
     load_config,
+    load_config_from_json,
+    save_config_to_json,
 )
 
 __all__ = [
@@ -11,5 +13,7 @@ __all__ = [
     "class_from_path",
     "instantiate_object_from_config",
     "load_config",
+    "save_config_to_json",
+    "load_config_from_json",
     "FieldReference",
 ]

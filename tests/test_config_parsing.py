@@ -5,7 +5,7 @@ import tempfile
 
 import pytest
 
-from konfigurator import load_config
+from konfigurator import load_config, load_config_from_json, save_config_to_json
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(this_dir, "config.py")
@@ -53,6 +53,19 @@ def test_override_with_unknown_key_raises():
             config_path=config_path,
             overrides=["class_config_1.does_not_exist=1"],
         )
+
+
+def test_save_and_load_config_from_json():
+    config = load_config(config_path=config_path)
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
+        temp_file_path = temp_file.name
+
+    save_config_to_json(config, temp_file_path)
+    reloaded = load_config_from_json(temp_file_path)
+
+    assert reloaded == config
+    assert reloaded["class_config_1"]["name"] == "test_instance_1"
 
 
 def test_override_from_cli():
